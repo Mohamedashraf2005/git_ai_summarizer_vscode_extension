@@ -3,3 +3,5 @@ dist/
 out/
 .vscode-test/
 *.vsix
+.env
+instruction.md

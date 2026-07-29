@@ -1,26 +1,74 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { getApiKey, storeApiKey } from './services/secretStorage';
+// import { getGitDiff } from './git/gitClient';
+import { generateCommitSummary } from './services/groqService';
+import { getGitDiff, getGitMetadata } from './git/gitClient';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+    let disposable = vscode.commands.registerCommand('git-ai-summarizer.analyzeDiff', async () => {
+        // 1. Secret Key check
+        let apiKey = await getApiKey(context);
+        if (!apiKey) {
+            apiKey = await vscode.window.showInputBox({
+                prompt: 'Enter your Groq API Key',
+                password: true,
+                ignoreFocusOut: true
+            });
+            if (!apiKey) {
+                vscode.window.showWarningMessage('API key is required.');
+                return;
+            }
+            await storeApiKey(context, apiKey);
+        }
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "git-ai-summarizer" is now active!');
+        // 2. Commit Selection UI (Partner 2 task)
+        const selectedCommit = await vscode.window.showQuickPick([
+            'HEAD~1',
+            'HEAD (Uncommitted Changes)'
+        ], { placeHolder: 'Select a commit or range to analyze' });
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('git-ai-summarizer.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Git AI Summarizer !');
-	});
+        if (!selectedCommit) {
+            return;
+        }
 
-	context.subscriptions.push(disposable);
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) {
+            vscode.window.showErrorMessage('Please open a workspace folder with a Git repo first.');
+            return;
+        }
+
+        const rootPath = workspaceFolders[0].uri.fsPath;
+
+        // 3. Show progress toast & call real AI pipeline
+        await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: `Analyzing ${selectedCommit} with Groq AI...`,
+            cancellable: false
+        }, async () => {
+           try {
+                // Fetch real diff from repository
+                const diffText = await getGitDiff(rootPath, selectedCommit);
+                
+                // Fetch the commit metadata (New!)
+                const metadataText = await getGitMetadata(rootPath, selectedCommit);
+
+                // Send diff AND metadata to Llama 3.3 via Groq
+                const aiSummaryResult = await generateCommitSummary(apiKey!, selectedCommit, diffText, metadataText);
+
+                // Render real output tab
+                const doc = await vscode.workspace.openTextDocument({
+                    content: aiSummaryResult,
+                    language: 'markdown'
+                });
+                await vscode.window.showTextDocument(doc, { preview: true });
+
+            } catch (err: any) {
+                vscode.window.showErrorMessage(`Analysis failed: ${err.message}`);
+            }
+        });
+    });
+
+    context.subscriptions.push(disposable);
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
