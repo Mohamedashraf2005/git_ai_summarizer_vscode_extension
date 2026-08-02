@@ -209,8 +209,8 @@ export function activate(context: vscode.ExtensionContext) {
             cancellable: false
         }, async () => {
             try {
-                const diffText = await getGitDiff(rootPath, selectedCommit);
-                const metadataText = await getGitMetadata(rootPath, selectedCommit);
+                const diffText = await getGitDiff(rootPath, selection.commitA, selection.commitB);
+                const metadataText = await getGitMetadata(rootPath, selection.commitA, selection.commitB);
 
                 const aiSummaryResult = await generateCommitSummary(apiKey!, selectedCommit, diffText, metadataText);
 
