@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import { clearApiKey, getApiKey, storeApiKey } from './services/secretStorage';
 import { generateCommitSummary } from './services/groqService';
 import { getGitDiff, getGitMetadata } from './git/gitClient';
+import { SidebarProvider } from './ui/SidebarProvider';
 
 const execFileAsync = promisify(execFile);
 
@@ -301,6 +302,34 @@ async function runAnalysis(context: vscode.ExtensionContext, rootPath: string, a
 }
 
 export function activate(context: vscode.ExtensionContext) {
+    const sidebarProvider = new SidebarProvider(context.extensionUri);
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(
+            'git-ai-summarizer-sidebar',
+            sidebarProvider
+        )
+    );
+
+    const analyzeDiffWithSelection = vscode.commands.registerCommand(
+        'git-ai-summarizer.analyzeDiffWithSelection',
+        async (selection: { commitA: string; commitB: string }) => {
+            const apiKey = await ensureApiKey(context);
+            if (!apiKey) {
+                vscode.window.showWarningMessage('API key is required.');
+                return;
+            }
+
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (!workspaceFolders) {
+                vscode.window.showErrorMessage('Please open a workspace folder with a Git repo first.');
+                return;
+            }
+
+            const rootPath = workspaceFolders[0].uri.fsPath;
+            await runAnalysis(context, rootPath, apiKey, selection);
+        }
+    );
+
     const analyzeDiff = vscode.commands.registerCommand('git-ai-summarizer.analyzeDiff', async () => {
         const apiKey = await ensureApiKey(context);
         if (!apiKey) {
@@ -329,6 +358,10 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         await runAnalysis(context, rootPath, apiKey, selection);
+    });
+
+    const setApiKeyCommand = vscode.commands.registerCommand('git-ai-summarizer.setApiKey', async () => {
+        await changeApiKey(context);
     });
 
     const copyMarkdownReport = vscode.commands.registerCommand('git-ai-summarizer.copyMarkdownReport', async () => {
@@ -374,7 +407,13 @@ export function activate(context: vscode.ExtensionContext) {
         await runAnalysis(context, rootPath, apiKey, selection);
     });
 
-    context.subscriptions.push(analyzeDiff, copyMarkdownReport, compareDifferentRange);
+    context.subscriptions.push(
+        analyzeDiffWithSelection,
+        analyzeDiff,
+        setApiKeyCommand,
+        copyMarkdownReport,
+        compareDifferentRange
+    );
 }
 
 export function deactivate() {}

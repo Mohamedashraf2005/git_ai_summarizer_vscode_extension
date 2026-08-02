@@ -9,9 +9,29 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:git-ai-summarizer-sidebar"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "git-ai-summarizer-container",
+          "title": "Git AI Summarizer",
+          "icon": "$(git-commit)"
+        }
+      ]
+    },
+    "views": {
+      "git-ai-summarizer-container": [
+        {
+          "type": "webview",
+          "id": "git-ai-summarizer-sidebar",
+          "name": "Analyze Commits"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "git-ai-summarizer.setApiKey",
