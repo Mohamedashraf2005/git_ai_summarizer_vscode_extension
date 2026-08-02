@@ -20,6 +20,16 @@
       {
         "command": "git-ai-summarizer.analyzeDiff",
         "title": "Git AI Summarizer: Analyze Git Diff"
+      },
+      {
+        "command": "git-ai-summarizer.copyMarkdownReport",
+        "title": "Copy Markdown Report",
+        "category": "Git AI Summarizer"
+      },
+      {
+        "command": "git-ai-summarizer.compareDifferentRange",
+        "title": "Compare Different Range",
+        "category": "Git AI Summarizer"
       }
     ],
     "configuration": {
@@ -46,6 +56,20 @@
           "description": "Model name to use with the selected AI provider."
         }
       }
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "git-ai-summarizer.copyMarkdownReport",
+          "when": "resourceLangId == markdown",
+          "group": "navigation@1"
+        },
+        {
+          "command": "git-ai-summarizer.compareDifferentRange",
+          "when": "resourceLangId == markdown",
+          "group": "navigation@2"
+        }
+      ]
     }
   },
   "scripts": {
