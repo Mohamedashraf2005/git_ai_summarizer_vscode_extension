@@ -1,19 +1,15 @@
 import * as vscode from 'vscode';
 
-const GROQ_API_KEY_SECRET = 'groqApiKey';
-
+const API_KEY_SECRET_KEY = 'groqApiKey';
 
 export async function getApiKey(context: vscode.ExtensionContext): Promise<string | undefined> {
-    return await context.secrets.get(GROQ_API_KEY_SECRET);
+    return await context.secrets.get(API_KEY_SECRET_KEY);
 }
 
-/**
- * Securely stores the Groq API key using VS Code's SecretStorage API.
- */
 export async function storeApiKey(context: vscode.ExtensionContext, apiKey: string): Promise<void> {
-    await context.secrets.store(GROQ_API_KEY_SECRET, apiKey);
+    await context.secrets.store(API_KEY_SECRET_KEY, apiKey);
 }
 
-export async function deleteApiKey(context: vscode.ExtensionContext): Promise<void> {
-    await context.secrets.delete(GROQ_API_KEY_SECRET);
+export async function clearApiKey(context: vscode.ExtensionContext): Promise<void> {
+    await context.secrets.delete(API_KEY_SECRET_KEY);
 }
