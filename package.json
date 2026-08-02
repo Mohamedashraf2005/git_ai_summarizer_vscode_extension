@@ -28,7 +28,8 @@
         {
           "type": "webview",
           "id": "git-ai-summarizer-sidebar",
-          "name": "Analyze Commits"
+          "name": "Analyze Commits",
+          "icon": "$(git-commit)"
         }
       ]
     },
