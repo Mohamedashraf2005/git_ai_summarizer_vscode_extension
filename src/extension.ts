@@ -119,33 +119,40 @@ async function pickCommitSelection(context: vscode.ExtensionContext, rootPath: s
             return undefined;
         }
 
-        const commitB = await pickCommitStep({
-            title: 'Step 2/2: Select Target Commit (commitB)',
-            items: buildTargetCommitItems(historyItems),
-            placeHolder: 'Select the target commit (commitB)',
-            activeItem: historyItems[0],
-            showBackButton: true,
-            refreshItems: async () => {
-                const refreshed = await getRecentGitCommits(rootPath);
-                return buildTargetCommitItems(refreshed.map(toCommitQuickPickItem));
-            },
-            onChangeApiKey: async () => {
-                await changeApiKey(context);
+        while (true) {
+            const commitB = await pickCommitStep({
+                title: 'Step 2/2: Select Target Commit (commitB)',
+                items: buildTargetCommitItems(historyItems),
+                placeHolder: 'Select the target commit (commitB)',
+                activeItem: historyItems[0],
+                showBackButton: true,
+                refreshItems: async () => {
+                    const refreshed = await getRecentGitCommits(rootPath);
+                    return buildTargetCommitItems(refreshed.map(toCommitQuickPickItem));
+                },
+                onChangeApiKey: async () => {
+                    await changeApiKey(context);
+                }
+            });
+
+            if (!commitB) {
+                return undefined;
             }
-        });
 
-        if (!commitB) {
-            return undefined;
+            if (commitB === 'back') {
+                break;
+            }
+
+            if (commitB.value === commitA.value) {
+                vscode.window.showWarningMessage('Base and target commits cannot be the same. Please choose a different target commit.');
+                continue;
+            }
+
+            return {
+                commitA: commitA.value,
+                commitB: commitB.value
+            };
         }
-
-        if (commitB === 'back') {
-            continue;
-        }
-
-        return {
-            commitA: commitA.value,
-            commitB: commitB.value
-        };
     }
 }
 
@@ -267,8 +274,18 @@ async function runAnalysis(context: vscode.ExtensionContext, rootPath: string, a
     }, async () => {
         try {
             const diffText = await getGitDiff(rootPath, selection.commitA, selection.commitB);
-            const metadataText = await getGitMetadata(rootPath, selection.commitA, selection.commitB);
 
+            if (diffText.startsWith('Failed to fetch git diff:')) {
+                vscode.window.showErrorMessage(diffText);
+                return;
+            }
+
+            if (!diffText.trim() || diffText.includes('No changes found in diff.')) {
+                vscode.window.showWarningMessage('No code differences found between selected commits.');
+                return;
+            }
+
+            const metadataText = await getGitMetadata(rootPath, selection.commitA, selection.commitB);
             const aiSummaryResult = await generateCommitSummary(apiKey, selectedCommit, diffText, metadataText);
 
             const doc = await vscode.workspace.openTextDocument({
