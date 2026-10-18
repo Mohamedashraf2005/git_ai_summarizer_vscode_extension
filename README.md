@@ -1,71 +1,78 @@
-# git-ai-summarizer README
+# Git AI Summarizer
 
-This is the README for your extension "git-ai-summarizer". After writing up a brief description, we recommend including the following sections.
+A lightweight, AI-powered Visual Studio Code extension that analyzes Git diffs and generates structured commit summaries, release notes, and architectural insights. 
 
-## Features
+## Overview
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+Git AI Summarizer streamlines the code review and documentation process by automatically analyzing Git commit ranges and generating comprehensive, structured Markdown reports. Instead of manually parsing through complex diffs, developers can instantly obtain high-level overviews, architectural impact assessments, and security considerations powered by modern AI models.
 
-For example if there is an image subfolder under your extension project workspace:
+## Key Features
+- Interactive Sidebar Interface: Visually browse and select base and target commits from your recent Git history directly within VS Code.
+- Structured Reporting: Generates professional Markdown reports divided into executive summaries, architectural impact, breaking changes, and security notes.
 
-\!\[feature X\]\(images/feature-x.png\)
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## Generated Report Structure
+
+The extension formats AI responses into a clean, standardized Markdown template containing the following sections:
+
+1. Executive Overview: A concise summary of the changes and their primary purpose.
+2. Architectural and Structural Impact: Analysis of how the changes affect the overall codebase structure.
+3. Breaking Changes and Risk Assessment: Identification of potential backward compatibility issues or high-risk modifications.
+4. Security and Dependency Considerations: Notes on vulnerable patterns, dependency updates, or security implications.
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- Visual Studio Code version 1.125.0 or newer
+- A local Git repository
+- An active API key for Groq
 
-## Extension Settings
+## Installation and Setup
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+1. Clone the repository to your local machine.
+2. Navigate to the project directory and install dependencies:
+   ```bash
+   npm install
+   ```
+3. Compile the extension:
+   ```bash
+   npm run compile
+   ```
+4. Open the VS Code Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`).
+5. Execute `Git AI Summarizer: Set API Key` and securely enter your provider API key.
+## Usage
 
-For example:
+1. Open a Git-enabled workspace in VS Code.
+2. Open the "Git AI Summarizer" panel from the Activity Bar.
+3. The sidebar will automatically load your 25 most recent commits.
+4. Select a "Base Commit (From)" and a "Target Commit (To)" (defaults to HEAD / Working Tree).
+5. Click "Analyze Differences".
+6. The extension will retrieve the diff, process it through the configured AI provider, and open a formatted Markdown report in the editor.
+7. Use the "Copy Markdown Report" command to copy the output to your clipboard.
 
-This extension contributes the following settings:
+## Available Commands
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+Access these via the VS Code Command Palette:
 
-## Known Issues
+- `Git AI Summarizer: Set API Key`: Securely store your AI provider API key.
+- `Git AI Summarizer: Analyze Git Diff`: Manually trigger an analysis of the current Git state.
+- `Copy Markdown Report`: Copy the currently generated report to the clipboard (available in the editor title menu when viewing a Markdown file).
+- `Compare Different Range`: Initiate a comparison between two specific commit ranges.
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+## Repository Structure
 
-## Release Notes
+- `src/extension.ts`: Main extension activation and command registration.
+- `src/git/`: Helper functions for retrieving Git diffs and commit metadata.
+- `src/services/`: AI provider integration and secure secret storage handling.
+- `src/prompts/`: System prompt definitions optimized for code analysis.
+- `src/templates/`: Markdown formatting templates (e.g., `formalTemplate.ts`).
+- `src/ui/`: Sidebar webview implementation and message handling (`SidebarProvider.ts`).
+- `package.json`: Extension manifest, command declarations, and configuration schema.
 
-Users appreciate release notes as you update your extension.
+## Development
 
-### 1.0.0
+For active development, use the watch scripts to automatically recompile on file changes:
 
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+```bash
+npm install
+npm run watch
+```

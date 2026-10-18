@@ -1,14 +1,15 @@
-// src/services/aiService.ts
-import * as vscode from 'vscode';
 import { SYSTEM_PROMPT } from '../prompts/systemPrompt';
 
-// export async function generateSummaryWithGroq(diffText: string, apiKey: string, model: string = 'llama-3.3-70b-versatile'): Promise<string> {
-export async function generateSummaryWithGroq(diffText: string, providedKey: string, model: string = 'llama-3.3-70b-versatile'): Promise<string> {
-  const apiKey = "groq_api_key"; // Replace with your actual Groq API key or retrieve it securely
+export async function generateSummaryWithGroq(
+  diffText: string,
+  providedKey: string,
+  model: string = 'openai/gpt-oss-120b'
+  // model="openai/gpt-oss-120b",
+): Promise<string> {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      'Authorization': `Bearer ${providedKey}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
@@ -22,11 +23,12 @@ export async function generateSummaryWithGroq(diffText: string, providedKey: str
   });
 
   if (!response.ok) {
-    const errorData = await response.json() as any;
-    // const errorData = await response.json();
+    const errorData = await response.json() as { error?: { message?: string } };
     throw new Error(`Groq API Error: ${errorData.error?.message || response.statusText}`);
   }
 
-  const data: any = await response.json();
-  return data.choices[0]?.message?.content || 'No summary generated.';
+  const data = await response.json() as {
+    choices?: Array<{ message?: { content?: string | null } }>;
+  };
+  return data.choices?.[0]?.message?.content || 'No summary generated.';
 }

@@ -69,12 +69,6 @@ function buildTargetCommitItems(historyItems: CommitQuickPickItem[]): CommitQuic
             detail: 'Compare against the current working tree',
             value: 'HEAD'
         },
-        {
-            label: 'HEAD',
-            description: 'Latest commit',
-            detail: 'Compare against the latest commit',
-            value: 'HEAD'
-        },
         ...historyItems
     ];
 }
@@ -295,8 +289,22 @@ async function runAnalysis(context: vscode.ExtensionContext, rootPath: string, a
             });
 
             await vscode.window.showTextDocument(doc, { preview: true });
-        } catch (err: any) {
-            vscode.window.showErrorMessage(`Analysis failed: ${err.message}`);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            const status = typeof err === 'object' && err !== null && 'status' in err
+                ? err.status
+                : undefined;
+
+            if (status === 429) {
+                vscode.window.showErrorMessage('Groq rate limit reached. Wait briefly before trying again, or select a narrower commit range.');
+            } else if (
+                status === 413 ||
+                /reduce the length of the messages or completion|context length/i.test(message)
+            ) {
+                vscode.window.showErrorMessage('The request exceeds the selected Groq model’s input limit. Try selecting a narrower commit range.');
+            } else {
+                vscode.window.showErrorMessage(`Analysis failed: ${message}`);
+            }
         }
     });
 }
