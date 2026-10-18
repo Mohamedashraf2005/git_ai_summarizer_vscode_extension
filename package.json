@@ -2,7 +2,7 @@
   "name": "git-ai-summarizer",
   "displayName": "Git AI Summarizer",
   "description": "AI-powered VS Code extension that analyzes Git diffs and generates structured commit summaries, release notes, and architectural insights.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "neuralnode",
   "icon": "images/git_icon.png",
   "license": "MIT",
